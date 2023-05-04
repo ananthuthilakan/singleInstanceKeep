@@ -3,7 +3,7 @@
 
 ;~ author: ananthuthilakan
 ;~ website: ananthuthilakan.com
-
+;~ github: https://github.com/ananthuthilakan/singleInstanceKeep
 ;~ do not relaunch the script as another instance if its already running 
 
 ;~ use case 
