@@ -19,9 +19,10 @@
 /*
 #include keep1stinstance.ahk
 #SingleInstance Off
+message:="my message" ; to send an array. convert array into json using  https://github.com/G33kDude/cJson.ahk/releases
 gui,testgui: add, button ,, ok
 gui,testgui: show , hide w400 h400 ,testtitle
-keep1stinstance("testgui")
+keep1stinstance("testgui",message) ; pass the guiname if it has or leave it blank , keep1stinstance([guiname,message])
 return
 
 testguiguiClose:  ; dont forget to add this 
@@ -31,12 +32,24 @@ exitapp
 ;==================================================================================================================================================
 
 
+Receive_WM_COPYDATA(wParam, lParam)
+{
+StringAddress := NumGet(lParam + 2*A_PtrSize)  
+Global recieved_message := StrGet(StringAddress)  
+showgui1stinstance()
+MsgBox, 0, recived message,% "the message from 2nd instance is [ " recieved_message " ]", 2 ; this is for testing , do what you want with the recieved message here
+return true  ; Returning 1 (true) is the traditional way to acknowledge this message.
+}
 
 
-keep1stinstance(guiname:="1"){
-iniRead,winid,windowid.ini,winid,winid
-TargetScriptTitle := "ahk_id" . winid
-StringToSend:="alreadyExist" ; just in case you want to send any data to 1st instance and do something based on that
+
+keep1stinstance(guiname:="1",StringToSend:="alreadyExist"){
+cPID:=DllCall("GetCurrentProcessId"), cName:=A_IsCompiled ? A_ScriptName : ComObjGet("winmgmts:")
+.ExecQuery("Select * from Win32_Process Where " cPID "=ProcessId")._NewEnum()[cPInf] ? cPInf.Name :"" ;AppNane|AutoHotkey.exe
+FOR proc in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
+IF (proc.Name = cName) && (proc.ProcessID != cPID) && (A_IsCompiled ? True : InStr(proc.CommandLine, A_ScriptFullPath))
+TargetScriptTitle:= "ahk_pid " . proc.ProcessID
+;~ iniRead,winid,windowid.ini,winid,winid
 result := Send_WM_COPYDATA(StringToSend, TargetScriptTitle)
 if (result=1){
 ;~ msgbox, already exist  `n it will show the already existing instance 
@@ -55,16 +68,10 @@ showgui1stinstance(guiname:=""){
 static guiname1
 if (guiname)
 guiname1:= guiname
+try
 gui,%guiname1% : show
 }
 
-Receive_WM_COPYDATA(wParam, lParam)
-{
-    StringAddress := NumGet(lParam + 2*A_PtrSize)  ; Retrieves the CopyDataStruct's lpData member.
-   Global recieved_message := StrGet(StringAddress)  ; Copy the string out of the 
-  showgui1stinstance()
-    return true  ; Returning 1 (true) is the traditional way to acknowledge this message.
-}
 
 Send_WM_COPYDATA(ByRef StringToSend, ByRef TargetScriptTitle)  ; ByRef saves a little memory in this case.
 ; This function sends the specified string to the specified window and returns the reply.
