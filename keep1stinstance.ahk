@@ -58,10 +58,6 @@ return
 }
 OnMessage(0x004A, "Receive_WM_COPYDATA")
 showgui1stinstance(guiname)
-Gui,%guiname% : +LastFound
-WinGet,winid, ID, A
-;~ msgbox, % winid
-iniwrite,%winid%,windowid.ini,winid,winid
 }
 
 showgui1stinstance(guiname:=""){
